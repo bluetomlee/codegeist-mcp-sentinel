@@ -1,0 +1,156 @@
+modules:
+  # ---------------------------------------------------------------------------
+  # Rovo agent
+  # ---------------------------------------------------------------------------
+  rovo:agent:
+    - key: mcp-sentinel-agent
+      name: MCP Sentinel
+      description: Audits MCP server tool definitions for tool poisoning, prompt injection, shadowing and rug pulls, and files findings in Jira.
+      prompt: resource:agent-prompt;prompt.md
+      conversationStarters:
+        - Scan this MCP server's tools/list output for tool poisoning
+        - Which scanned MCP servers are risky right now?
+        - Show me the findings for a server
+        - File Jira issues for the high-severity findings
+      actions:
+        - scan-mcp-server
+        - list-scanned-servers
+        - get-server-findings
+        - file-jira-issues
+        - approve-baseline
+
+  # ---------------------------------------------------------------------------
+  # Rovo actions (reusable by any agent, and exposed as MCP tools below)
+  # ---------------------------------------------------------------------------
+  action:
+    - key: scan-mcp-server
+      name: Scan MCP server tools
+      function: scan-action
+      actionVerb: CREATE
+      description: Scan the raw JSON of an MCP tools/list response for tool poisoning, prompt injection, shadowing, invisible Unicode, excessive permissions and rug pulls. Stores the result and returns a Markdown findings table. Never fetches URLs.
+      inputs:
+        serverId:
+          title: Server ID
+          type: string
+          required: true
+          description: Short stable identifier for the MCP server, e.g. "github-mcp". Letters, digits, ".", "_", "-".
+        serverName:
+          title: Server name
+          type: string
+          required: false
+          description: Optional human-readable name.
+        toolsJson:
+          title: tools/list JSON
+          type: string
+          required: true
+          description: The raw JSON returned by the MCP server's tools/list method (or an array of tool objects), passed verbatim.
+    - key: list-scanned-servers
+      name: List scanned MCP servers
+      function: list-action
+      actionVerb: GET
+      description: List every MCP server that has been scanned, with risk score, max severity, rug-pull status and linked Jira issues.
+      inputs:
+        filter:
+          title: Filter
+          type: string
+          required: false
+          description: Unused; reserved.
+    - key: get-server-findings
+      name: Get MCP server findings
+      function: findings-action
+      actionVerb: GET
+      description: Return the stored findings for one scanned MCP server as a Markdown table.
+      inputs:
+        serverId:
+          title: Server ID
+          type: string
+          required: true
+          description: Identifier used when the server was scanned.
+    - key: file-jira-issues
+      name: File Jira issues for MCP findings
+      function: file-issues-action
+      actionVerb: CREATE
+      description: Create one Jira issue per finding at or above a severity threshold for a scanned MCP server. Already-filed findings are skipped. Defaults to the current Jira project.
+      inputs:
+        serverId:
+          title: Server ID
+          type: string
+          required: true
+          description: Identifier of the scanned server.
+        projectKey:
+          title: Jira project key
+          type: string
+          required: false
+          description: Target Jira project key, e.g. "SEC". Defaults to the current project in Jira.
+        minSeverity:
+          title: Minimum severity
+          type: string
+          required: false
+          description: One of critical, high, medium, low. Default high.
+    - key: approve-baseline
+      name: Approve MCP server baseline
+      function: approve-action
+      actionVerb: UPDATE
+      description: Accept the latest scanned tool definitions of an MCP server as the trusted baseline, clearing rug-pull alerts. Only call after the user explicitly confirms the changes are legitimate.
+      inputs:
+        serverId:
+          title: Server ID
+          type: string
+          required: true
+          description: Identifier of the scanned server.
+
+  # ---------------------------------------------------------------------------
+  # Rovo MCP server (Preview): exposes the same actions as MCP tools to Rovo
+  # Studio agents and, when an admin enables it, to external MCP clients.
+  # ---------------------------------------------------------------------------
+  rovo:mcp:
+    - key: mcp-sentinel-mcp
+      name: MCP Sentinel
+      tools:
+        - scan-mcp-server
+        - list-scanned-servers
+        - get-server-findings
+        - file-jira-issues
+
+  # ---------------------------------------------------------------------------
+  # Jira project page dashboard (UI Kit)
+  # ---------------------------------------------------------------------------
+  jira:projectPage:
+    - key: mcp-sentinel-project-page
+      title: MCP Sentinel
+      resource: main
+      resolver:
+        function: resolver
+      render: native
+
+  function:
+    - key: resolver
+      handler: index.handler
+    - key: scan-action
+      handler: index.scanMcpServerAction
+    - key: list-action
+      handler: index.listScannedServersAction
+    - key: findings-action
+      handler: index.getServerFindingsAction
+    - key: file-issues-action
+      handler: index.fileJiraIssuesAction
+    - key: approve-action
+      handler: index.approveBaselineAction
+
+resources:
+  - key: main
+    path: src/frontend/index.tsx
+  - key: agent-prompt
+    path: src/prompts
+
+app:
+  # Replaced by `forge register`.
+  id: ari:cloud:ecosystem::app/00000000-0000-0000-0000-000000000000
+  runtime:
+    name: nodejs22.x
+
+permissions:
+  scopes:
+    - storage:app
+    - read:jira-work
+    - write:jira-work

@@ -1,0 +1,40 @@
+{
+  "github": [
+    {"name": "create_issue", "description": "Create a new issue in a GitHub repository. Returns the created issue URL.",
+     "inputSchema": {"type": "object", "properties": {
+       "owner": {"type": "string", "description": "Repository owner"},
+       "repo": {"type": "string", "description": "Repository name"},
+       "title": {"type": "string", "description": "Issue title"},
+       "body": {"type": "string", "description": "Issue body in Markdown"}}, "required": ["owner", "repo", "title"]}},
+    {"name": "search_code", "description": "Search for code across GitHub repositories using GitHub code search syntax. See https://docs.github.com/en/search-github/searching-on-github/searching-code for query syntax.",
+     "inputSchema": {"type": "object", "properties": {"q": {"type": "string", "description": "Search query"}, "per_page": {"type": "number", "description": "Results per page (max 100)"}}, "required": ["q"]}},
+    {"name": "get_file_contents", "description": "Get the contents of a file or directory from a GitHub repository.",
+     "inputSchema": {"type": "object", "properties": {"owner": {"type": "string"}, "repo": {"type": "string"}, "path": {"type": "string", "description": "Path to file/directory"}, "branch": {"type": "string"}}, "required": ["owner", "repo", "path"]}},
+    {"name": "create_pull_request", "description": "Create a new pull request. Call get_file_contents first if you need to inspect the base branch.",
+     "inputSchema": {"type": "object", "properties": {"owner": {"type": "string"}, "repo": {"type": "string"}, "title": {"type": "string"}, "head": {"type": "string"}, "base": {"type": "string"}}, "required": ["owner", "repo", "title", "head", "base"]}}
+  ],
+  "filesystem": [
+    {"name": "read_file", "description": "Read the complete contents of a file from the file system. Only works within allowed directories.",
+     "inputSchema": {"type": "object", "properties": {"path": {"type": "string"}}, "required": ["path"]}},
+    {"name": "write_file", "description": "Create a new file or completely overwrite an existing file with new content. Use with caution as it will overwrite existing files without warning. Only works within allowed directories.",
+     "inputSchema": {"type": "object", "properties": {"path": {"type": "string"}, "content": {"type": "string"}}, "required": ["path", "content"]}},
+    {"name": "list_directory", "description": "Get a detailed listing of all files and directories in a specified path. Results clearly distinguish between files and directories with [FILE] and [DIR] prefixes.",
+     "inputSchema": {"type": "object", "properties": {"path": {"type": "string"}}, "required": ["path"]}}
+  ],
+  "weather": [
+    {"name": "get_forecast", "description": "Get the weather forecast for a location. Provide latitude and longitude in decimal degrees. Data from api.weather.gov.",
+     "inputSchema": {"type": "object", "properties": {"latitude": {"type": "number"}, "longitude": {"type": "number"}}, "required": ["latitude", "longitude"]}},
+    {"name": "get_alerts", "description": "Get weather alerts for a US state. You must provide a two-letter state code, e.g. CA.",
+     "inputSchema": {"type": "object", "properties": {"state": {"type": "string", "description": "Two-letter US state code (e.g. CA, NY)"}}, "required": ["state"]}}
+  ],
+  "vault": [
+    {"name": "rotate_api_key", "description": "Rotate an API key for a service account. Returns the new key ID (never the secret value).",
+     "inputSchema": {"type": "object", "properties": {"key_id": {"type": "string"}}, "required": ["key_id"]}},
+    {"name": "get_commit", "description": "Fetch a commit by SHA, e.g. 3f786850e387550fdab836ed7e6dc881de23001b.",
+     "inputSchema": {"type": "object", "properties": {"sha": {"type": "string", "description": "Full 40-character commit SHA"}}, "required": ["sha"]}},
+    {"name": "translate", "description": "Translate text between languages. 将文本翻译成目标语言。Supports emoji 👍🏽 and accented text: café, naïve.",
+     "inputSchema": {"type": "object", "properties": {"text": {"type": "string"}, "target": {"type": "string", "enum": ["en", "zh", "fr"]}}, "required": ["text", "target"]}},
+    {"name": "add_comment", "description": "Add a comment to an issue. The notes field is optional free text shown to reviewers.",
+     "inputSchema": {"type": "object", "properties": {"issue": {"type": "string"}, "notes": {"type": "string", "description": "Optional reviewer notes"}}, "required": ["issue"]}}
+  ]
+}

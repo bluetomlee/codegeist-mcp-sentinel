@@ -1,0 +1,38 @@
+{
+  "name": "mcp-sentinel",
+  "version": "0.1.0",
+  "description": "Forge app + Rovo agent that audits MCP server tool definitions for tool poisoning and prompt injection.",
+  "license": "MIT",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src tests",
+    "check": "npm run typecheck && npm run lint && npm run validate:manifest && npm test",
+    "validate:manifest": "node scripts/validate-manifest.cjs"
+  },
+  "dependencies": {
+    "@forge/api": "^8.4.0",
+    "@forge/bridge": "^7.2.1",
+    "@forge/kvs": "^2.1.1",
+    "@forge/react": "^12.4.0",
+    "@forge/resolver": "^2.0.2",
+    "react": "^18.3.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.0",
+    "@types/node": "^22.10.0",
+    "@types/react": "^18.3.12",
+    "eslint": "^10.14.0",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.72.1",
+    "vitest": "^5.0.5"
+  },
+  "overrides": {
+    "prosemirror-view": "^1.42.3",
+    "glob": "^14.0.3",
+    "minimatch": "^11.0.3"
+  }
+}
